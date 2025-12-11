@@ -2,37 +2,80 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <button id="settingsBtn"
-        style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 24px;">⚙️</button>
+    
     <style>
+        /* iOS-совместимые стили */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            width: 100%;
+            height: 100%;
+            position: fixed; /* Фиксируем чтобы избежать скролла на iOS */
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-align: center;
-            padding: 0;
-            margin: 0;
             user-select: none;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            overflow: auto;
+            max-height: 100vh;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        #settingsBtn {
+            position: absolute;
+            top: max(10px, env(safe-area-inset-top));
+            right: max(10px, env(safe-area-inset-right));
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            z-index: 100;
+            padding: 8px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         header {
             padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
         }
 
         #coins {
-            font-size: 48px;
+            font-size: clamp(28px, 8vw, 48px);
             font-weight: bold;
+            margin: 10px 0;
+            word-break: break-word;
         }
 
         #dice {
-            font-size: 120px;
+            font-size: clamp(60px, 20vw, 120px);
             transition: transform 0.3s ease;
             cursor: pointer;
+            margin: 10px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #dice.anim {
@@ -40,69 +83,22 @@
         }
 
         @keyframes diceRoll {
-            0% {
-                transform: rotate(0deg) scale(1);
-            }
-
-            25% {
-                transform: rotate(360deg) scale(1.4);
-            }
-
-            50% {
-                transform: rotate(720deg) scale(1.7);
-            }
-
-            75% {
-                transform: rotate(1080deg) scale(1.4);
-            }
-
-            100% {
-                transform: rotate(1440deg) scale(1);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.75;
-            }
-        }
-
-        @keyframes buttonPulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(360deg) scale(1.4); }
+            50% { transform: rotate(720deg) scale(1.7); }
+            75% { transform: rotate(1080deg) scale(1.4); }
+            100% { transform: rotate(1440deg) scale(1); }
         }
 
         .main {
-            flex-grow: 1;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-around;
             align-items: center;
+            padding: 10px;
+            width: 100%;
+            overflow: hidden;
         }
 
         .board-container {
@@ -110,32 +106,46 @@
             overflow-x: auto;
             padding: 10px 0;
             -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        .board-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
         }
 
         #board {
             display: flex;
             justify-content: flex-start;
             flex-wrap: nowrap;
-            gap: 10px;
-            padding: 0 20px;
-            scroll-snap-type: x proximity;
+            gap: 8px;
+            padding: 0 16px;
+            min-width: min-content;
         }
 
         .slot {
-            min-width: 68px;
-            height: 68px;
-            border-radius: 14px;
+            min-width: 60px;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             color: white;
-            animation: fadeIn 0.5s;
+            flex-shrink: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .slot:active {
+            transform: scale(0.95);
         }
 
         .slot:hover {
@@ -145,16 +155,21 @@
 
         .current {
             background: linear-gradient(45deg, #ffd700, #ffaa00) !important;
-            border: 4px solid #ff6600 !important;
-            box-shadow: 0 0 25px #ffaa00, 0 0 15px #ffd700 inset !important;
-            transform: scale(1.15) !important;
+            border: 3px solid #ff6600 !important;
+            box-shadow: 0 0 20px #ffaa00, 0 0 10px #ffd700 inset !important;
+            transform: scale(1.1) !important;
         }
 
         .highlight {
             background: linear-gradient(45deg, #ffd700, #ff6600) !important;
-            box-shadow: 0 0 50px #ffd700, 0 0 70px #ff6600 !important;
-            transform: scale(1.4) !important;
+            box-shadow: 0 0 30px #ffd700, 0 0 50px #ff6600 !important;
+            transform: scale(1.3) !important;
             animation: pulse 0.6s infinite !important;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
         }
 
         .locked {
@@ -167,35 +182,40 @@
         }
 
         #progress-bar {
-            width: 80%;
-            height: 8px;
-            background: #333;
-            border-radius: 4px;
-            margin: 10px auto;
+            width: 90%;
+            max-width: 400px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin: 15px auto;
+            overflow: hidden;
         }
 
         #progress-fill {
             height: 100%;
             background: #ffd700;
-            border-radius: 4px;
-            transition: width 0.5s;
+            border-radius: 3px;
+            transition: width 0.5s ease;
         }
 
         footer {
             display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
             flex-wrap: wrap;
-            gap: 10px;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            width: 100%;
+            margin-top: auto;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
         }
 
         button {
             background: linear-gradient(45deg, #00ff88, #00cc66);
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 15px;
+            padding: 12px 16px;
+            font-size: 14px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: bold;
             box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
@@ -204,8 +224,16 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            min-width: 120px;
+            min-width: 110px;
+            flex: 1;
+            min-height: 44px; /* Минимальная высота для iOS */
+            -webkit-user-select: none;
+            user-select: none;
             touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.95);
         }
 
         button:hover:not(:disabled) {
@@ -214,64 +242,58 @@
         }
 
         button:disabled {
-            background: #ccc;
+            background: #666;
             cursor: not-allowed;
             transform: none;
-        }
-
-        button.pulse {
-            animation: buttonPulse 1.5s infinite;
+            opacity: 0.6;
         }
 
         .prestigeBtn {
-            background: #ffcc00;
+            background: linear-gradient(45deg, #ffcc00, #ff9900);
             color: #333;
         }
 
-        #tutorial-modal {
+        /* Модальные окна */
+        .modal {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
             display: none;
-            /* Скрыто по умолчанию */
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            z-index: 1000;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
-        #tutorial-content {
+        .modal-content {
             background: white;
             color: black;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 16px;
             text-align: left;
-            max-width: 80%;
+            max-width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 20px;
         }
 
-        @media (max-width: 600px) {
-            .slot {
-                min-width: 60px;
-                height: 60px;
-                font-size: 10px;
-            }
+        .modal-content h2, .modal-content h3 {
+            margin-top: 0;
+            color: #333;
+        }
 
-            button {
-                min-width: 100px;
-                font-size: 14px;
-            }
+        .modal-content p {
+            margin: 10px 0;
+            line-height: 1.4;
+        }
 
-            #coins {
-                font-size: 36px;
-            }
-
-            #dice {
-                font-size: 90px;
-            }
+        .modal-content button {
+            margin-top: 15px;
+            width: 100%;
         }
 
         #confetti {
@@ -281,38 +303,128 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 5;
+            z-index: 999;
             display: none;
+        }
+
+        /* Адаптивность для маленьких экранов */
+        @media (max-width: 480px) {
+            .slot {
+                min-width: 55px;
+                width: 55px;
+                height: 55px;
+                font-size: 10px;
+            }
+
+            button {
+                min-width: 100px;
+                font-size: 13px;
+                padding: 10px 12px;
+            }
+
+            #dice {
+                font-size: clamp(50px, 18vw, 90px);
+            }
+
+            footer {
+                gap: 6px;
+                padding: 10px;
+            }
+
+            .modal-content {
+                padding: 16px;
+                max-width: 95%;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .slot {
+                min-width: 50px;
+                width: 50px;
+                height: 50px;
+                font-size: 9px;
+            }
+
+            button {
+                min-width: 90px;
+                font-size: 12px;
+            }
+        }
+
+        /* Портретный режим */
+        @media (orientation: portrait) and (max-height: 700px) {
+            header {
+                padding: 10px;
+                padding-top: max(10px, env(safe-area-inset-top));
+            }
+            
+            #dice {
+                font-size: clamp(50px, 15vw, 80px);
+                min-height: 80px;
+            }
+            
+            .board-container {
+                max-height: 100px;
+            }
+        }
+
+        /* Ландшафтный режим */
+        @media (orientation: landscape) and (max-height: 500px) {
+            body {
+                flex-direction: row;
+                overflow-y: auto;
+            }
+            
+            .main {
+                flex: 3;
+            }
+            
+            footer {
+                flex-direction: column;
+                width: auto;
+                flex: 1;
+                max-width: 200px;
+            }
+            
+            #board {
+                flex-wrap: wrap;
+                max-height: 150px;
+                overflow-y: auto;
+            }
+            
+            .slot {
+                min-width: 50px;
+                width: 50px;
+                height: 50px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Добавлен отсутствующий HTML-контент -->
-    <div id="tutorial-modal">
-        <div id="tutorial-content">
+    <button id="settingsBtn" aria-label="Настройки">⚙️</button>
+
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
             <h2>🎮 Как играть?</h2>
             <p>1. Нажми на кубик, чтобы бросить его и пройти по полю</p>
             <p>2. Зарабатывай монеты на открытых слотах</p>
             <p>3. Открывай и улучшай слоты за монеты</p>
             <p>4. Используй кнопки для получения бонусов</p>
-            <button onclick="document.getElementById('tutorial-modal').style.display='none'">Понятно!</button>
+            <button onclick="closeModal('tutorial-modal')">Понятно!</button>
         </div>
     </div>
 
-    <div id="settings-modal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20; align-items: center; justify-content: center;">
-        <div style="background: white; color: black; padding: 20px; border-radius: 10px; text-align: center;">
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
             <h3>⚙️ Настройки тестирования</h3>
-            <button onclick="coins += 1000000; updateUI(); saveProgress(); showAlert('+1M монет');"
-                style="background: #ff0066; color: white; margin: 5px;">
+            <button onclick="coins += 1000000; updateUI(); saveProgress(); showAlert('+1M монет');" style="background: #ff0066; color: white; margin-bottom: 10px;">
                 +1M монет
             </button>
-            <button onclick="energy = 5; updateUI(); saveProgress(); showAlert('Энергия заполнена');"
-                style="margin: 5px;">
+            <button onclick="energy = 5; updateUI(); saveProgress(); showAlert('Энергия заполнена');" style="margin-bottom: 10px;">
                 ♻️ Полная энергия
             </button>
-            <button onclick="document.getElementById('settings-modal').style.display='none'" style="margin: 5px;">
+            <button onclick="closeModal('settings-modal')">
                 Закрыть
             </button>
         </div>
@@ -321,18 +433,18 @@
     <div id="confetti"></div>
 
     <header>
-        <h1>🍀 Броски Кубиков 🍀</h1>
+        <h1 style="font-size: clamp(20px, 6vw, 28px); margin: 0 0 10px 0;">🍀 Броски Кубиков 🍀</h1>
         <div id="coins">Монеты: 0</div>
     </header>
 
     <div class="main">
-        <div id="dice">🎲</div>
-        <div id="progress-bar">
+        <div id="dice" role="button" tabindex="0" aria-label="Бросить кубик">🎲</div>
+        <div id="progress-bar" aria-label="Прогресс энергии">
             <div id="progress-fill" style="width: 0%"></div>
         </div>
 
         <div class="board-container">
-            <div id="board"></div>
+            <div id="board" role="region" aria-label="Игровое поле"></div>
         </div>
     </div>
 
@@ -346,7 +458,7 @@
 
     <script>
         const boardSize = 20;
-        const REGEN_TIME = 600000; // 10 минут
+        const REGEN_TIME = 600000;
         const DAY_MS = 86400000;
         const PITY_ROLLS = 20;
 
@@ -364,6 +476,8 @@
         if (tg) {
             tg.ready();
             tg.expand();
+            // Настройка для iOS
+            tg.enableClosingConfirmation();
         }
 
         function loadProgress() {
@@ -443,19 +557,36 @@
                 const slot = document.createElement('div');
                 slot.className = 'slot';
                 slot.dataset.index = i;
+                slot.setAttribute('role', 'button');
+                slot.setAttribute('tabindex', '0');
+                slot.setAttribute('aria-label', `Слот ${i + 1}`);
 
-                if (i === currentPosition) slot.classList.add('current');
+                if (i === currentPosition) {
+                    slot.classList.add('current');
+                    slot.setAttribute('aria-current', 'true');
+                }
 
                 if (!unlocked[i]) {
                     const cost = unlockCost(i);
                     slot.innerHTML = `🔒<br>${cost.toLocaleString()}`;
                     slot.classList.add('locked');
+                    slot.setAttribute('aria-label', `Заблокированный слот ${i + 1}, стоимость: ${cost.toLocaleString()} монет`);
                 } else {
                     slot.innerHTML = `x${(multipliers[i] * globalMulti).toFixed(1)}`;
                     slot.classList.add('unlocked');
+                    slot.setAttribute('aria-label', `Слот ${i + 1}, множитель: x${(multipliers[i] * globalMulti).toFixed(1)}`);
                 }
 
-                slot.onclick = () => handleSlot(i);
+                slot.onclick = (e) => {
+                    e.preventDefault();
+                    handleSlot(i);
+                };
+                
+                // Добавляем обработчик для тач-устройств
+                slot.ontouchstart = (e) => {
+                    e.preventDefault();
+                };
+                
                 boardEl.appendChild(slot);
             }
 
@@ -463,7 +594,11 @@
             setTimeout(() => {
                 const currentSlot = document.querySelector(`[data-index="${currentPosition}"]`);
                 if (currentSlot) {
-                    currentSlot.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    currentSlot.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center', 
+                        inline: 'center'
+                    });
                 }
             }, 100);
         }
@@ -627,7 +762,15 @@
         }
 
         function showHelp() {
-            document.getElementById('tutorial-modal').style.display = 'flex';
+            openModal('tutorial-modal');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         function showAlert(message) {
@@ -642,7 +785,6 @@
             const confettiEl = document.getElementById('confetti');
             confettiEl.style.display = 'block';
 
-            // Простая анимация конфетти
             confettiEl.innerHTML = '';
             for (let i = 0; i < 50; i++) {
                 const dot = document.createElement('div');
@@ -655,7 +797,6 @@
                 dot.style.top = '-20px';
                 dot.style.animation = `fall ${1 + Math.random() * 2}s linear forwards`;
 
-                // Добавляем CSS для анимации падения
                 const style = document.createElement('style');
                 style.textContent = `
                     @keyframes fall {
@@ -674,43 +815,65 @@
 
         // Инициализация событий
         document.addEventListener('DOMContentLoaded', () => {
+            // Назначаем обработчики
             document.getElementById('rollBtn').onclick = roll;
             document.getElementById('adBtn').onclick = watchAd;
             document.getElementById('dailyBtn').onclick = claimDaily;
             document.getElementById('prestigeBtn').onclick = prestige;
             document.getElementById('helpBtn').onclick = showHelp;
             document.getElementById('dice').onclick = roll;
+            document.getElementById('settingsBtn').onclick = () => openModal('settings-modal');
 
-            // Закрытие модального окна при клике вне его
-            document.getElementById('tutorial-modal').onclick = function (e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
+            // Добавляем обработчик для клавиатуры на кубике
+            document.getElementById('dice').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    roll();
                 }
-            };
+            });
+
+            // Закрытие модальных окон при клике вне
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.onclick = function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                };
+            });
 
             loadProgress();
 
-            // Автообновление энергии каждую минуту
+            // Автообновление энергии
             setInterval(() => {
                 updateEnergy();
                 updateUI();
             }, 60000);
+            
+            // Предотвращаем масштабирование на iOS при двойном тапе
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Предотвращаем контекстное меню на iOS
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
         });
-        window.debugAddCoins = function (amount = 1000000) {
+
+        // Дебаг функция
+        window.debugAddCoins = function(amount = 1000000) {
             coins += amount;
             showAlert(`[DEBUG] +${amount.toLocaleString()} монет`);
             updateUI();
             saveProgress();
-            console.log(`Добавлено ${amount} монет. Всего: ${coins}`);
         };
     </script>
-
-    <script>
-// Обработчик кнопки настроек
-document.getElementById('settingsBtn').onclick = () => {
-    document.getElementById('settings-modal').style.display = 'flex';
-};
-</script>
 </body>
 
 </html>
