@@ -1,29 +1,30 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+    <meta name="format-detection" content="telephone=no">
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
+
     <style>
-        /* iOS-совместимые стили */
         * {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             box-sizing: border-box;
+            user-select: none;
         }
 
         html, body {
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
             width: 100%;
             height: 100%;
-            position: fixed; /* Фиксируем чтобы избежать скролла на iOS */
+            overflow: hidden;
+            position: fixed;
+            touch-action: manipulation;
         }
 
         body {
@@ -31,11 +32,9 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-align: center;
-            user-select: none;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            max-height: 100vh;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
@@ -53,6 +52,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         header {
@@ -64,7 +65,6 @@
             font-size: clamp(28px, 8vw, 48px);
             font-weight: bold;
             margin: 10px 0;
-            word-break: break-word;
         }
 
         #dice {
@@ -76,6 +76,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: auto;
         }
 
         #dice.anim {
@@ -98,26 +99,20 @@
             align-items: center;
             padding: 10px;
             width: 100%;
-            overflow: hidden;
         }
 
         .board-container {
             width: 100%;
             overflow-x: auto;
-            padding: 10px 0;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none;
         }
 
-        .board-container::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
+        .board-container::-webkit-scrollbar { display: none; }
 
         #board {
             display: flex;
             justify-content: flex-start;
-            flex-wrap: nowrap;
             gap: 8px;
             padding: 0 16px;
             min-width: min-content;
@@ -136,22 +131,13 @@
             font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             color: white;
             flex-shrink: 0;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: manipulation;
+            pointer-events: auto;
         }
 
-        .slot:active {
-            transform: scale(0.95);
-        }
-
-        .slot:hover {
-            transform: scale(1.12);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-        }
+        .slot:active { transform: scale(0.95); }
 
         .current {
             background: linear-gradient(45deg, #ffd700, #ffaa00) !important;
@@ -172,20 +158,14 @@
             50% { opacity: 0.75; }
         }
 
-        .locked {
-            background: #444 !important;
-            color: #eee;
-        }
-
-        .unlocked {
-            background: linear-gradient(45deg, #00ff88, #00cc66);
-        }
+        .locked { background: #444 !important; color: #eee; }
+        .unlocked { background: linear-gradient(45deg, #00ff88, #00cc66); }
 
         #progress-bar {
             width: 90%;
             max-width: 400px;
             height: 6px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.2);
             border-radius: 3px;
             margin: 15px auto;
             overflow: hidden;
@@ -204,7 +184,7 @@
             justify-content: center;
             gap: 8px;
             padding: 12px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0,0,0,0.2);
             width: 100%;
             margin-top: auto;
             padding-bottom: max(12px, env(safe-area-inset-bottom));
@@ -218,7 +198,7 @@
             border-radius: 12px;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 4px 12px rgba(0,255,136,0.4);
             transition: all 0.2s;
             display: flex;
             align-items: center;
@@ -226,25 +206,15 @@
             gap: 5px;
             min-width: 110px;
             flex: 1;
-            min-height: 44px; /* Минимальная высота для iOS */
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: manipulation;
+            min-height: 44px;
+            pointer-events: auto;
         }
 
-        button:active {
-            transform: scale(0.95);
-        }
-
-        button:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.6);
-        }
+        button:active { transform: scale(0.95); }
 
         button:disabled {
             background: #666;
             cursor: not-allowed;
-            transform: none;
             opacity: 0.6;
         }
 
@@ -253,14 +223,10 @@
             color: #333;
         }
 
-        /* Модальные окна */
         .modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
+            inset: 0;
+            background: rgba(0,0,0,0.85);
             display: none;
             align-items: center;
             justify-content: center;
@@ -273,135 +239,29 @@
             color: black;
             padding: 20px;
             border-radius: 16px;
-            text-align: left;
             max-width: 90%;
             max-height: 80vh;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 0 20px;
-        }
-
-        .modal-content h2, .modal-content h3 {
-            margin-top: 0;
-            color: #333;
-        }
-
-        .modal-content p {
-            margin: 10px 0;
-            line-height: 1.4;
-        }
-
-        .modal-content button {
-            margin-top: 15px;
-            width: 100%;
         }
 
         #confetti {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             pointer-events: none;
             z-index: 999;
             display: none;
         }
 
-        /* Адаптивность для маленьких экранов */
         @media (max-width: 480px) {
-            .slot {
-                min-width: 55px;
-                width: 55px;
-                height: 55px;
-                font-size: 10px;
-            }
-
-            button {
-                min-width: 100px;
-                font-size: 13px;
-                padding: 10px 12px;
-            }
-
-            #dice {
-                font-size: clamp(50px, 18vw, 90px);
-            }
-
-            footer {
-                gap: 6px;
-                padding: 10px;
-            }
-
-            .modal-content {
-                padding: 16px;
-                max-width: 95%;
-            }
-        }
-
-        @media (max-width: 320px) {
-            .slot {
-                min-width: 50px;
-                width: 50px;
-                height: 50px;
-                font-size: 9px;
-            }
-
-            button {
-                min-width: 90px;
-                font-size: 12px;
-            }
-        }
-
-        /* Портретный режим */
-        @media (orientation: portrait) and (max-height: 700px) {
-            header {
-                padding: 10px;
-                padding-top: max(10px, env(safe-area-inset-top));
-            }
-            
-            #dice {
-                font-size: clamp(50px, 15vw, 80px);
-                min-height: 80px;
-            }
-            
-            .board-container {
-                max-height: 100px;
-            }
-        }
-
-        /* Ландшафтный режим */
-        @media (orientation: landscape) and (max-height: 500px) {
-            body {
-                flex-direction: row;
-                overflow-y: auto;
-            }
-            
-            .main {
-                flex: 3;
-            }
-            
-            footer {
-                flex-direction: column;
-                width: auto;
-                flex: 1;
-                max-width: 200px;
-            }
-            
-            #board {
-                flex-wrap: wrap;
-                max-height: 150px;
-                overflow-y: auto;
-            }
-            
-            .slot {
-                min-width: 50px;
-                width: 50px;
-                height: 50px;
-            }
+            .slot { min-width: 55px; width: 55px; height: 55px; font-size: 10px; }
+            button { min-width: 100px; font-size: 13px; }
+            #dice { font-size: clamp(50px, 18vw, 90px); }
         }
     </style>
 </head>
-
 <body>
+
     <button id="settingsBtn" aria-label="Настройки">⚙️</button>
 
     <div id="tutorial-modal" class="modal">
@@ -418,15 +278,13 @@
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <h3>⚙️ Настройки тестирования</h3>
-            <button onclick="coins += 1000000; updateUI(); saveProgress(); showAlert('+1M монет');" style="background: #ff0066; color: white; margin-bottom: 10px;">
+            <button onclick="coins += 1000000; updateUI(); saveProgress(); showAlert('+1M монет');" style="background:#ff0066;color:white;margin-bottom:10px;">
                 +1M монет
             </button>
-            <button onclick="energy = 5; updateUI(); saveProgress(); showAlert('Энергия заполнена');" style="margin-bottom: 10px;">
+            <button onclick="energy = 5; updateUI(); saveProgress(); showAlert('Энергия заполнена');" style="margin-bottom:10px;">
                 ♻️ Полная энергия
             </button>
-            <button onclick="closeModal('settings-modal')">
-                Закрыть
-            </button>
+            <button onclick="closeModal('settings-modal')">Закрыть</button>
         </div>
     </div>
 
@@ -458,9 +316,9 @@
 
     <script>
         const boardSize = 20;
-        const REGEN_TIME = 600000;
+        const REGEN_TIME = 600000; // 10 минут
         const DAY_MS = 86400000;
-        const PITY_ROLLS = 20;
+        const PITY_ROLLS = 12; // уменьшили до 12 — комфортнее
 
         let coins = 0, energy = 0, lastEnergyUpdate = Date.now(), rollsLeft = 0;
         let multipliers = Array(boardSize).fill(1);
@@ -471,12 +329,10 @@
         let rollsSinceJackpot = 0;
         let prestigeLevel = 0;
 
-        // Инициализация Telegram Web App
-        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        const tg = window.Telegram?.WebApp || null;
         if (tg) {
             tg.ready();
             tg.expand();
-            // Настройка для iOS
             tg.enableClosingConfirmation();
         }
 
@@ -496,19 +352,18 @@
                     prestigeLevel = data.prestigeLevel || 0;
                     rollsSinceJackpot = data.rollsSinceJackpot || 0;
                 } catch (e) {
-                    console.error("Ошибка загрузки сохранения:", e);
+                    console.error("Ошибка загрузки:", e);
                 }
             }
 
-            // Автоматически открываем первые 3 слота для новых игроков
+            // Новым игрокам открываем первые 3 слота
             if (!unlocked.some(u => u)) {
-                unlocked[0] = true;
-                unlocked[1] = true;
-                unlocked[2] = true;
+                unlocked[0] = unlocked[1] = unlocked[2] = true;
             }
 
             updateEnergy();
             updateUI();
+            saveProgress(); // сразу сохраняем актуальное состояние
         }
 
         function saveProgress() {
@@ -534,17 +389,14 @@
 
         function updateUI() {
             document.getElementById('coins').textContent = `Монеты: ${Math.floor(coins).toLocaleString()}`;
-            const rollBtn = document.getElementById('rollBtn');
-            rollBtn.textContent = `🎲 Крутить! (${rollsLeft}/5)`;
-            rollBtn.disabled = rollsLeft <= 0;
+            document.getElementById('rollBtn').textContent = `🎲 Крутить! (${rollsLeft}/5)`;
+            document.getElementById('rollBtn').disabled = rollsLeft <= 0;
 
             const prestigeBtn = document.getElementById('prestigeBtn');
-            prestigeBtn.disabled = !unlocked.every(u => u);
+            prestigeBtn.disabled = !unlocked.every(u => u) || prestigeLevel > 0 && coins === 0;
             prestigeBtn.textContent = `🔄 Prestige ${prestigeLevel}`;
 
-            // Обновление прогресс-бара
-            const progressPercent = (energy / 5) * 100;
-            document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+            document.getElementById('progress-fill').style.width = `${(energy / 5) * 100}%`;
 
             updateBoard();
         }
@@ -561,45 +413,24 @@
                 slot.setAttribute('tabindex', '0');
                 slot.setAttribute('aria-label', `Слот ${i + 1}`);
 
-                if (i === currentPosition) {
-                    slot.classList.add('current');
-                    slot.setAttribute('aria-current', 'true');
-                }
+                if (i === currentPosition) slot.classList.add('current');
 
                 if (!unlocked[i]) {
                     const cost = unlockCost(i);
                     slot.innerHTML = `🔒<br>${cost.toLocaleString()}`;
                     slot.classList.add('locked');
-                    slot.setAttribute('aria-label', `Заблокированный слот ${i + 1}, стоимость: ${cost.toLocaleString()} монет`);
                 } else {
                     slot.innerHTML = `x${(multipliers[i] * globalMulti).toFixed(1)}`;
                     slot.classList.add('unlocked');
-                    slot.setAttribute('aria-label', `Слот ${i + 1}, множитель: x${(multipliers[i] * globalMulti).toFixed(1)}`);
                 }
 
-                slot.onclick = (e) => {
-                    e.preventDefault();
-                    handleSlot(i);
-                };
-                
-                // Добавляем обработчик для тач-устройств
-                slot.ontouchstart = (e) => {
-                    e.preventDefault();
-                };
-                
                 boardEl.appendChild(slot);
             }
 
-            // Прокрутка к текущей позиции
+            // Прокрутка к текущему слоту
             setTimeout(() => {
-                const currentSlot = document.querySelector(`[data-index="${currentPosition}"]`);
-                if (currentSlot) {
-                    currentSlot.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center', 
-                        inline: 'center'
-                    });
-                }
+                const current = document.querySelector(`[data-index="${currentPosition}"]`);
+                if (current) current.scrollIntoView({ behavior: 'smooth', inline: 'center' });
             }, 100);
         }
 
@@ -611,26 +442,24 @@
             return Math.floor(800 * multipliers[i] * Math.pow(2, prestigeLevel));
         }
 
-        function handleSlot(i) {
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
+        function handleSlot(index) {
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
-            if (!unlocked[i]) {
-                const cost = unlockCost(i);
+            if (!unlocked[index]) {
+                const cost = unlockCost(index);
                 if (coins >= cost) {
                     coins -= cost;
-                    unlocked[i] = true;
+                    unlocked[index] = true;
                     showAlert('Слот разблокирован! 🚀');
                 } else {
                     showAlert(`Нужны ${cost.toLocaleString()} монет ☝️`);
                 }
             } else {
-                const cost = upgradeCost(i);
+                const cost = upgradeCost(index);
                 if (coins >= cost) {
                     coins -= cost;
-                    multipliers[i] *= 1.5;
-                    showAlert(`Улучшено до x${(multipliers[i] * globalMulti).toFixed(1)}! 💥`);
+                    multipliers[index] *= 1.5;
+                    showAlert(`Улучшено до x${(multipliers[index] * globalMulti).toFixed(1)}! 💥`);
                 } else {
                     showAlert(`Нужны ${cost.toLocaleString()} монет ☝️`);
                 }
@@ -642,15 +471,14 @@
         function roll() {
             if (rollsLeft <= 0) return;
 
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('heavy');
-            }
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
 
             const diceEl = document.getElementById('dice');
             diceEl.classList.add('anim');
 
             setTimeout(() => {
                 diceEl.classList.remove('anim');
+
                 const steps = Math.floor(Math.random() * 6) + 1;
                 let reward = 0;
                 let path = [];
@@ -690,7 +518,6 @@
                 updateEnergy();
                 updateUI();
                 saveProgress();
-
             }, 1300);
         }
 
@@ -708,9 +535,7 @@
                     const slot = document.querySelector(`[data-index="${pos}"]`);
                     if (slot) {
                         slot.classList.add('highlight');
-                        if (tg && tg.HapticFeedback) {
-                            tg.HapticFeedback.impactOccurred('light');
-                        }
+                        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
                     }
                 }, idx * 280);
             });
@@ -723,11 +548,10 @@
         function claimDaily() {
             const now = Date.now();
             const today = Math.floor(now / DAY_MS);
-
             if (today > lastDailyClaim) {
                 coins += 500 * globalMulti;
                 lastDailyClaim = today;
-                showAlert('🌟 +' + Math.floor(500 * globalMulti) + ' монет ежедневно!');
+                showAlert(`🌟 +${Math.floor(500 * globalMulti)} монет ежедневно!`);
                 updateUI();
                 saveProgress();
             } else {
@@ -749,9 +573,7 @@
             prestigeLevel++;
             globalMulti += 0.1;
             unlocked = Array(boardSize).fill(false);
-            unlocked[0] = true;
-            unlocked[1] = true;
-            unlocked[2] = true;
+            unlocked[0] = unlocked[1] = unlocked[2] = true;
             multipliers = Array(boardSize).fill(1);
             currentPosition = 0;
             coins = 0;
@@ -765,115 +587,92 @@
             openModal('tutorial-modal');
         }
 
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function showAlert(message) {
-            if (tg && tg.showAlert) {
-                tg.showAlert(message);
-            } else {
-                alert(message);
-            }
+            if (tg?.showAlert) tg.showAlert(message);
+            else alert(message);
         }
 
         function showConfetti() {
-            const confettiEl = document.getElementById('confetti');
-            confettiEl.style.display = 'block';
+            const el = document.getElementById('confetti');
+            el.style.display = 'block';
+            el.innerHTML = '';
 
-            confettiEl.innerHTML = '';
             for (let i = 0; i < 50; i++) {
                 const dot = document.createElement('div');
                 dot.style.position = 'absolute';
                 dot.style.width = '10px';
                 dot.style.height = '10px';
-                dot.style.background = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'][Math.floor(Math.random() * 5)];
+                dot.style.background = ['#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff'][Math.floor(Math.random()*5)];
                 dot.style.borderRadius = '50%';
-                dot.style.left = Math.random() * 100 + 'vw';
+                dot.style.left = Math.random()*100 + 'vw';
                 dot.style.top = '-20px';
-                dot.style.animation = `fall ${1 + Math.random() * 2}s linear forwards`;
-
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes fall {
-                        to { transform: translateY(100vh) rotate(${Math.random() * 360}deg); opacity: 0; }
-                    }
-                `;
-                confettiEl.appendChild(style);
-                confettiEl.appendChild(dot);
+                dot.style.animation = `fall ${1 + Math.random()*2}s linear forwards`;
+                el.appendChild(dot);
             }
 
             setTimeout(() => {
-                confettiEl.style.display = 'none';
-                confettiEl.innerHTML = '';
+                el.style.display = 'none';
+                el.innerHTML = '';
             }, 2000);
         }
 
-        // Инициализация событий
-        document.addEventListener('DOMContentLoaded', () => {
-            // Назначаем обработчики
-            document.getElementById('rollBtn').onclick = roll;
-            document.getElementById('adBtn').onclick = watchAd;
-            document.getElementById('dailyBtn').onclick = claimDaily;
-            document.getElementById('prestigeBtn').onclick = prestige;
-            document.getElementById('helpBtn').onclick = showHelp;
-            document.getElementById('dice').onclick = roll;
-            document.getElementById('settingsBtn').onclick = () => openModal('settings-modal');
-
-            // Добавляем обработчик для клавиатуры на кубике
-            document.getElementById('dice').addEventListener('keypress', (e) => {
+        // Универсальный обработчик для iOS
+        function addTapHandler(el, handler) {
+            if (!el) return;
+            el.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+            el.addEventListener('click', e => {
+                e.preventDefault();
+                handler(e);
+            }, { passive: false });
+            el.addEventListener('keypress', e => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    roll();
+                    handler(e);
                 }
             });
+        }
 
-            // Закрытие модальных окон при клике вне
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.onclick = function(e) {
-                    if (e.target === this) {
-                        this.style.display = 'none';
-                    }
-                };
+        document.addEventListener('DOMContentLoaded', () => {
+            addTapHandler(document.getElementById('dice'), roll);
+            addTapHandler(document.getElementById('rollBtn'), roll);
+            addTapHandler(document.getElementById('adBtn'), watchAd);
+            addTapHandler(document.getElementById('dailyBtn'), claimDaily);
+            addTapHandler(document.getElementById('prestigeBtn'), prestige);
+            addTapHandler(document.getElementById('helpBtn'), showHelp);
+            addTapHandler(document.getElementById('settingsBtn'), () => openModal('settings-modal'));
+
+            // Слоты будут добавляться динамически — обработчики добавляем после updateBoard
+            const observer = new MutationObserver(() => {
+                document.querySelectorAll('.slot').forEach(slot => {
+                    addTapHandler(slot, () => {
+                        const index = parseInt(slot.dataset.index);
+                        handleSlot(index);
+                    });
+                });
             });
+            observer.observe(document.getElementById('board'), { childList: true });
 
             loadProgress();
 
-            // Автообновление энергии
+            // Автообновление энергии каждую минуту
             setInterval(() => {
                 updateEnergy();
                 updateUI();
             }, 60000);
-            
-            // Предотвращаем масштабирование на iOS при двойном тапе
+
+            // Предотвращаем двойной тап на iOS
             let lastTouchEnd = 0;
-            document.addEventListener('touchend', function(event) {
+            document.addEventListener('touchend', e => {
                 const now = Date.now();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
+                if (now - lastTouchEnd <= 300) e.preventDefault();
                 lastTouchEnd = now;
             }, false);
-            
-            // Предотвращаем контекстное меню на iOS
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-        });
 
-        // Дебаг функция
-        window.debugAddCoins = function(amount = 1000000) {
-            coins += amount;
-            showAlert(`[DEBUG] +${amount.toLocaleString()} монет`);
-            updateUI();
-            saveProgress();
-        };
+            document.addEventListener('contextmenu', e => e.preventDefault());
+        });
     </script>
 </body>
-
 </html>
