@@ -8,18 +8,14 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             color: white; 
             text-align: center; 
-            padding: 0; 
+            padding: 20px; 
             margin: 0;
             user-select: none;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh; 
-            overflow: auto; 
         }
-        header { padding: 20px; }
-        #coins { font-size: 48px; font-weight: bold; }
+        #coins { font-size: 48px; margin: 20px; font-weight: bold; }
         #dice { 
             font-size: 120px; 
+            margin: 20px; 
             transition: transform 0.3s ease;
             cursor: pointer;
         }
@@ -31,29 +27,30 @@
             75% { transform: rotate(1080deg) scale(1.4); }
             100% { transform: rotate(1440deg) scale(1); }
         }
-        .main { 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
+        button { 
+            background: linear-gradient(45deg, #00ff88, #00cc66); 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            border-radius: 15px; 
+            margin: 8px; 
+            cursor: pointer; 
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,255,136,0.4);
+            transition: all 0.2s;
         }
-        .board-container { 
-            width: 100%; 
-            overflow-x: auto; 
-            padding: 10px 0; 
-            -webkit-overflow-scrolling: touch; 
-        }
+        button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,255,136,0.6); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
         #board { 
             display: flex; 
-            justify-content: flex-start; 
-            flex-wrap: nowrap; 
-            gap: 10px; 
-            padding: 0 20px;
-            scroll-snap-type: x proximity; 
+            justify-content: center; 
+            flex-wrap: wrap; 
+            max-width: 900px; 
+            margin: 30px auto; 
+            gap: 6px;
         }
         .slot { 
-            min-width: 68px; 
+            width: 68px; 
             height: 68px; 
             border-radius: 14px; 
             display: flex; 
@@ -65,13 +62,12 @@
             cursor: pointer; 
             transition: all 0.3s ease; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            color: white;
         }
         .slot:hover { transform: scale(1.12); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
         .current { 
             background: linear-gradient(45deg, #ffd700, #ffaa00) !important; 
             border: 4px solid #ff6600 !important; 
-            box-shadow: 0 0 25px #ffaa00, 0 0 15px #ffd700 inset !important; 
+            box-shadow: 0 0 25px #ffaa00 !important; 
             transform: scale(1.15) !important;
         }
         .highlight { 
@@ -81,101 +77,37 @@
             animation: pulse 0.6s infinite !important;
         }
         @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.75;} }
-        .locked { background: #444 !important; color: #eee; } 
-        .unlocked { background: linear-gradient(45deg, #00ff88, #00cc66); } 
-        #progress-bar { width: 80%; height: 8px; background: #333; border-radius: 4px; margin: 10px auto; }
-        #progress-fill { height: 100%; background: #ffd700; border-radius: 4px; transition: width 0.5s; }
-        footer { 
-            display: flex; 
-            justify-content: space-around; 
-            padding: 15px; 
-            background: rgba(0,0,0,0.2); 
-            flex-wrap: wrap; 
-            gap: 10px; 
-        }
-        button { 
-            background: linear-gradient(45deg, #00ff88, #00cc66); 
-            border: none; 
-            padding: 10px 20px; 
-            font-size: 16px; 
-            border-radius: 15px; 
-            cursor: pointer; 
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,255,136,0.4);
-            transition: all 0.2s;
-            display: flex; align-items: center; gap: 5px;
-            min-width: 120px; 
-            touch-action: manipulation; 
-        }
-        button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,255,136,0.6); }
-        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-        button.pulse { animation: buttonPulse 1.5s infinite; }
-        @keyframes buttonPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .prestigeBtn { background: #ffcc00; color: #333; }
-        #tutorial-modal { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); 
-            display: flex; align-items: center; justify-content: center; z-index: 10;
-        }
-        #tutorial-content { background: white; color: black; padding: 20px; border-radius: 10px; text-align: left; max-width: 80%; }
-        @media (max-width: 600px) { 
-            .slot { min-width: 60px; height: 60px; font-size: 10px; } 
-            button { min-width: 100px; font-size: 14px; } 
-        }
-        #confetti { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 5; } 
+        .locked { background: #666 !important; color: #ddd; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>🍀 Броски Кубиков 🍀</h1>
-        <div id="coins">Монеты: 0</div>
-    </header>
-    <div class="main">
-        <div id="dice">🎲</div>
-        <div class="board-container">
-            <div id="board"></div>
-        </div>
-        <div id="progress-bar"><div id="progress-fill"></div></div>
-    </div>
-    <footer>
-        <button id="rollBtn">🎲 Крутить! (5/5)</button>
-        <button id="adBtn" class="pulse">📺 Реклама +3</button>
-        <button id="dailyBtn">🎁 Ежедневка</button>
-        <button id="leaderboardBtn">🏆 Топ-10</button>
-        <button id="prestigeBtn" class="prestigeBtn" disabled>🔄 Prestige</button>
-        <button id="shareBtn" class="pulse">📤 Поделиться</button>
-    </footer>
-    <div id="tutorial-modal" style="display:none;">
-        <div id="tutorial-content">
-            <h2>Добро пожаловать!</h2>
-            <p>1. Брось кубик, чтобы двигаться по доске и зарабатывать монеты. (Скролль доску влево/вправо если нужно)</p>
-            <p>2. Разблокируй и апгрейди слоты для большего дохода.</p>
-            <p>3. Смотри рекламу за энергию, делись для бонусов!</p>
-            <button onclick="closeTutorial()">Понял!</button>
-        </div>
-    </div>
-
-    <canvas id="confetti" style="position:fixed;top:0;left:0;pointer-events:none;z-index:5;"></canvas>
+    <h1>🍀 Броски Кубиков 🍀</h1>
+    <div id="coins">Монеты: 0</div>
+    <div id="dice">🎲</div>
+    <button id="rollBtn">Крутить! (5/5)</button>
+    <button id="adBtn">📺 Реклама за +3</button>
+    <button id="dailyBtn">🎁 Ежедневка</button>
+    <button id="leaderboardBtn">🏆 Топ-10</button>
+    <div id="board"></div>
+    <button id="shareBtn">📤 Поделиться</button>
 
     <script>
         const boardSize = 20;
-        const REGEN_TIME = 600000; // 10 мин
-        const DAY_MS = 86400000;
-        const PITY_ROLLS = 20;
+        const REGEN_TIME = 600000; // 10 мин в мс
+        const DAY_MS = 86400000; // 24 часа в мс
 
         let coins = 0, energy = 0, lastEnergyUpdate = Date.now(), rollsLeft = 0;
         let multipliers = Array(boardSize).fill(1);
         let unlocked = Array(boardSize).fill(false);
         let currentPosition = 0;
         let lastDailyClaim = 0;
-        let globalMulti = 1.0;
-        let rollsSinceJackpot = 0;
-        let prestigeLevel = 0;
 
         const tg = window.Telegram.WebApp;
         tg.initDataUnsafe = tg.initDataUnsafe || {};
         tg.ready();
         tg.expand();
 
+        // Load from localStorage
         function loadProgress() {
             const saved = localStorage.getItem('diceProgress');
             if (saved) {
@@ -187,41 +119,27 @@
                 energy = data.energy || 0;
                 lastEnergyUpdate = data.lastEnergyUpdate || Date.now();
                 lastDailyClaim = data.lastDailyClaim || 0;
-                globalMulti = data.globalMulti || 1.0;
-                prestigeLevel = data.prestigeLevel || 0;
-                rollsSinceJackpot = data.rollsSinceJackpot || 0;
             }
+            // Init first slots
             if (!unlocked[0]) unlocked.slice(0,3).forEach((_,i) => unlocked[i]=true);
             updateEnergy();
             updateUI();
-            showTutorialIfFirst();
         }
 
+        // Save to localStorage
         function saveProgress() {
             const data = {
                 coins, multipliers, unlocked, currentPosition,
-                energy, lastEnergyUpdate, lastDailyClaim,
-                globalMulti, prestigeLevel, rollsSinceJackpot,
-                updatedAt: Date.now()
+                energy, lastEnergyUpdate, lastDailyClaim, updatedAt: Date.now()
             };
             localStorage.setItem('diceProgress', JSON.stringify(data));
         }
 
-        function showTutorialIfFirst() {
-            if (!localStorage.getItem('tutorialShown')) {
-                document.getElementById('tutorial-modal').style.display = 'flex';
-                localStorage.setItem('tutorialShown', 'true');
-            }
-        }
-
-        function closeTutorial() {
-            document.getElementById('tutorial-modal').style.display = 'none';
-        }
-
+        // Energy regen timer
         setInterval(() => {
             updateEnergy();
             updateUI();
-        }, 60000);
+        }, 60000); // Check every min
 
         function updateEnergy() {
             const now = Date.now();
@@ -236,47 +154,33 @@
         function updateUI() {
             document.getElementById('coins').textContent = `Монеты: ${Math.floor(coins).toLocaleString()}`;
             const rollBtn = document.getElementById('rollBtn');
-            rollBtn.textContent = `🎲 Крутить! (${rollsLeft}/5)`;
+            rollBtn.textContent = `Крутить! (${rollsLeft}/5)`;
             rollBtn.disabled = rollsLeft <= 0;
-            document.getElementById('prestigeBtn').disabled = !unlocked.every(u => u);
             updateBoard();
-            updateProgressBar();
-        }
-
-        function updateProgressBar() {
-            const unlockedCount = unlocked.filter(u => u).length;
-            const progress = (unlockedCount / boardSize) * 100;
-            document.getElementById('progress-fill').style.width = `${progress}%`;
         }
 
         function updateBoard() {
-            console.log('Updating board...'); // Debug
             const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
             for (let i = 0; i < boardSize; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'slot';
                 slot.dataset.index = i;
-                slot.setAttribute('aria-label', unlocked[i] ? `Слот ${i}: x${(multipliers[i] * globalMulti).toFixed(1)}` : `Заблокированный слот ${i}`);
                 if (i === currentPosition) slot.classList.add('current');
                 if (!unlocked[i]) {
                     const cost = unlockCost(i);
                     slot.innerHTML = `?<br>${cost.toLocaleString()}`;
                     slot.classList.add('locked');
                 } else {
-                    slot.innerHTML = `x${(multipliers[i] * globalMulti).toFixed(1)}`;
-                    slot.classList.add('unlocked');
-                    slot.style.animation = 'fadeIn 0.5s';
+                    slot.innerHTML = `x${multipliers[i].toFixed(1)}`;
                 }
                 slot.onclick = () => handleSlot(i);
                 boardEl.appendChild(slot);
             }
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        function unlockCost(i) { return Math.floor(500 * Math.pow(1.5, i) * Math.pow(2, prestigeLevel)); }
-        function upgradeCost(i) { return Math.floor(800 * multipliers[i] * Math.pow(2, prestigeLevel)); }
+        function unlockCost(i) { return Math.floor(500 * Math.pow(1.5, i)); }
+        function upgradeCost(i) { return Math.floor(800 * multipliers[i]); }
 
         function handleSlot(i) {
             tg.HapticFeedback.impactOccurred('medium');
@@ -294,7 +198,7 @@
                 if (coins >= cost) {
                     coins -= cost;
                     multipliers[i] *= 1.5;
-                    tg.showAlert(`x${(multipliers[i] * globalMulti).toFixed(1)}! 💥`);
+                    tg.showAlert(`x${multipliers[i].toFixed(1)}! 💥`);
                 } else {
                     tg.showAlert(`Нужны ${cost.toLocaleString()} монет ☝️`);
                 }
@@ -304,7 +208,6 @@
         }
 
         function roll() {
-            console.log('Roll clicked'); // Debug
             if (rollsLeft <= 0) return;
             tg.HapticFeedback.impactOccurred('heavy');
             const diceEl = document.getElementById('dice');
@@ -316,19 +219,14 @@
                 let path = [];
                 let tempPos = currentPosition;
                 let hasJackpot = false;
-                rollsSinceJackpot++;
                 for (let i = 0; i < steps; i++) {
                     tempPos = (tempPos + 1) % boardSize;
                     path.push(tempPos);
                     if (unlocked[tempPos]) {
-                        let slotR = multipliers[tempPos] * globalMulti;
-                        let bonus = getBonus();
-                        if (bonus === 'x2') slotR *= 2;
-                        if (bonus === 'jackpot' || rollsSinceJackpot >= PITY_ROLLS) {
+                        let slotR = multipliers[tempPos];
+                        if (Math.random() < 0.05) {
                             slotR *= 10;
                             hasJackpot = true;
-                            rollsSinceJackpot = 0;
-                            triggerConfetti();
                         }
                         reward += slotR;
                     }
@@ -345,13 +243,6 @@
             }, 1300);
         }
 
-        function getBonus() {
-            const rand = Math.random();
-            if (rand < 0.7) return 'none';
-            if (rand < 0.9) return 'x2';
-            return 'jackpot';
-        }
-
         function animatePath(path) {
             path.forEach((pos, idx) => {
                 setTimeout(() => {
@@ -366,45 +257,13 @@
             setTimeout(() => document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')), path.length * 280 + 600);
         }
 
-        function triggerConfetti() {
-            const canvas = document.getElementById('confetti');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const ctx = canvas.getContext('2d');
-            const particles = [];
-            for (let i = 0; i < 100; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height / 2,
-                    size: Math.random() * 5 + 5,
-                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-                    speedX: Math.random() * 4 - 2,
-                    speedY: Math.random() * 5 + 2
-                });
-            }
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
-                    p.x += p.speedX;
-                    p.y += p.speedY;
-                    if (p.y > canvas.height) p.y = 0;
-                });
-                requestAnimationFrame(animate);
-            }
-            animate();
-            setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 3000);
-        }
-
         function claimDaily() {
-            console.log('Daily clicked'); // Debug
             const now = Date.now();
             const today = Math.floor(now / DAY_MS);
             if (today > lastDailyClaim) {
-                coins += 500 * globalMulti;
+                coins += 500;
                 lastDailyClaim = today;
-                tg.showAlert('🌟 +' + Math.floor(500 * globalMulti) + ' монет ежедневно!');
+                tg.showAlert('🌟 +500 монет ежедневно!');
                 updateUI();
                 saveProgress();
             } else {
@@ -413,72 +272,38 @@
         }
 
         function showLeaderboard() {
-            console.log('Leaderboard clicked'); // Debug
-            tg.showPopup({
-                title: '🏆 Топ-10',
-                message: 'Ты #1 с ' + Math.floor(coins).toLocaleString() + ' монетами! (Локальный топ) 👑',
-                buttons: [{ text: 'OK' }]
-            });
+            tg.showAlert('🏆 Ты #1 с ' + Math.floor(coins).toLocaleString() + ' монетами! (Локальный топ) 👑');
         }
 
         function watchAd() {
-            console.log('Ad clicked'); // Debug
             energy = Math.min(5, energy + 3);
             updateEnergy();
             tg.showAlert('📺 +3 крутки! Готово 🚀');
             updateUI();
-        }
-
-        function prestige() {
-            console.log('Prestige clicked'); // Debug
-            if (!unlocked.every(u => u)) return;
-            prestigeLevel++;
-            globalMulti += 0.1;
-            unlocked = Array(boardSize).fill(false);
-            unlocked.slice(0,3).forEach((_,i) => unlocked[i]=true);
-            multipliers = Array(boardSize).fill(1);
-            currentPosition = 0;
-            coins = 0;
-            tg.showAlert(`🔄 Prestige ${prestigeLevel}! +10% глобальный мультипликатор! 🌟`);
-            updateUI();
-            saveProgress();
+            // Stub: real ads Day2
         }
 
         function share() {
-            console.log('Share clicked'); // Debug
             tg.shareUrl(
                 tg.initDataUnsafe.start_app || window.location.href,
                 `🍀 ${Math.floor(coins).toLocaleString()} монет в Бросках! Играй:`
             );
-            coins += 200 * globalMulti;
-            tg.showAlert('📤 +' + Math.floor(200 * globalMulti) + ' монет за шаринг! 🔥');
+            // Stub reward: +100 монет за share (real track Day3)
+            coins += 100;
+            tg.showAlert('📤 +100 монет за шаринг! 🔥');
             updateUI();
             saveProgress();
         }
 
-        // Assignments after all definitions
-        document.getElementById('rollBtn').onclick = function() {
-            try { roll(); } catch (e) { console.error('Roll error:', e); }
-        };
-        document.getElementById('adBtn').onclick = function() {
-            try { watchAd(); } catch (e) { console.error('Ad error:', e); }
-        };
-        document.getElementById('dailyBtn').onclick = function() {
-            try { claimDaily(); } catch (e) { console.error('Daily error:', e); }
-        };
-        document.getElementById('leaderboardBtn').onclick = function() {
-            try { showLeaderboard(); } catch (e) { console.error('Leaderboard error:', e); }
-        };
-        document.getElementById('prestigeBtn').onclick = function() {
-            try { prestige(); } catch (e) { console.error('Prestige error:', e); }
-        };
-        document.getElementById('shareBtn').onclick = function() {
-            try { share(); } catch (e) { console.error('Share error:', e); }
-        };
-        document.getElementById('dice').onclick = function() {
-            try { roll(); } catch (e) { console.error('Dice error:', e); }
-        };
+        // Bind events
+        document.getElementById('rollBtn').onclick = roll;
+        document.getElementById('adBtn').onclick = watchAd;
+        document.getElementById('dailyBtn').onclick = claimDaily;
+        document.getElementById('leaderboardBtn').onclick = showLeaderboard;
+        document.getElementById('shareBtn').onclick = share;
+        document.getElementById('dice').onclick = roll; // Bonus tap
 
+        // Start
         loadProgress();
     </script>
 </body>
