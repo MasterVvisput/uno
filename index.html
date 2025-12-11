@@ -24,7 +24,7 @@
             height: 100%;
             overflow: hidden;
             position: fixed;
-            touch-action: manipulation;
+            /* Убрано touch-action: manipulation - может мешать на iOS */
         }
 
         body {
@@ -36,6 +36,9 @@
             flex-direction: column;
             min-height: 100vh;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            /* Добавлено для лучшей работы на iOS */
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y; /* Более безопасная альтернатива */
         }
 
         #settingsBtn {
@@ -53,7 +56,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            pointer-events: auto;
+            /* Убрано pointer-events: auto - не нужно, так как нет parent с pointer-events: none */
         }
 
         header {
@@ -76,7 +79,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: auto;
+            /* Убрано pointer-events: auto - не нужно */
         }
 
         #dice.anim {
@@ -134,7 +137,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             color: white;
             flex-shrink: 0;
-            pointer-events: auto;
+            /* Убрано pointer-events: auto - не нужно */
         }
 
         .slot:active { transform: scale(0.95); }
@@ -207,7 +210,7 @@
             min-width: 110px;
             flex: 1;
             min-height: 44px;
-            pointer-events: auto;
+            /* Убрано pointer-events: auto - не нужно */
         }
 
         button:active { transform: scale(0.95); }
@@ -248,7 +251,7 @@
         #confetti {
             position: fixed;
             inset: 0;
-            pointer-events: none;
+            pointer-events: none; /* Это правильно оставить */
             z-index: 999;
             display: none;
         }
@@ -619,14 +622,10 @@
             }, 2000);
         }
 
-        // Универсальный обработчик для iOS
+        // Упрощенный обработчик для iOS - только click
         function addTapHandler(el, handler) {
             if (!el) return;
-            el.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-            el.addEventListener('click', e => {
-                e.preventDefault();
-                handler(e);
-            }, { passive: false });
+            el.addEventListener('click', handler);
             el.addEventListener('keypress', e => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -636,24 +635,35 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            addTapHandler(document.getElementById('dice'), roll);
-            addTapHandler(document.getElementById('rollBtn'), roll);
-            addTapHandler(document.getElementById('adBtn'), watchAd);
-            addTapHandler(document.getElementById('dailyBtn'), claimDaily);
-            addTapHandler(document.getElementById('prestigeBtn'), prestige);
-            addTapHandler(document.getElementById('helpBtn'), showHelp);
-            addTapHandler(document.getElementById('settingsBtn'), () => openModal('settings-modal'));
+            // Привязываем обработчики напрямую к элементам
+            document.getElementById('dice').addEventListener('click', roll);
+            document.getElementById('rollBtn').addEventListener('click', roll);
+            document.getElementById('adBtn').addEventListener('click', watchAd);
+            document.getElementById('dailyBtn').addEventListener('click', claimDaily);
+            document.getElementById('prestigeBtn').addEventListener('click', prestige);
+            document.getElementById('helpBtn').addEventListener('click', showHelp);
+            document.getElementById('settingsBtn').addEventListener('click', () => openModal('settings-modal'));
 
-            // Слоты будут добавляться динамически — обработчики добавляем после updateBoard
-            const observer = new MutationObserver(() => {
-                document.querySelectorAll('.slot').forEach(slot => {
-                    addTapHandler(slot, () => {
+            // Обработчик для слотов через делегирование событий
+            document.getElementById('board').addEventListener('click', (e) => {
+                const slot = e.target.closest('.slot');
+                if (slot) {
+                    const index = parseInt(slot.dataset.index);
+                    handleSlot(index);
+                }
+            });
+
+            // Также добавляем обработчики клавиш для слотов
+            document.getElementById('board').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    const slot = e.target.closest('.slot');
+                    if (slot) {
+                        e.preventDefault();
                         const index = parseInt(slot.dataset.index);
                         handleSlot(index);
-                    });
-                });
+                    }
+                }
             });
-            observer.observe(document.getElementById('board'), { childList: true });
 
             loadProgress();
 
@@ -663,15 +673,22 @@
                 updateUI();
             }, 60000);
 
-            // Предотвращаем двойной тап на iOS
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', e => {
+            // Упрощенная защита от двойного тапа
+            let lastClick = 0;
+            document.addEventListener('click', (e) => {
                 const now = Date.now();
-                if (now - lastTouchEnd <= 300) e.preventDefault();
-                lastTouchEnd = now;
-            }, false);
+                if (now - lastClick < 500) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                lastClick = now;
+            });
 
             document.addEventListener('contextmenu', e => e.preventDefault());
+            
+            // iOS Safari специфичные исправления
+            document.addEventListener('touchstart', function() {}, {passive: true});
+            document.addEventListener('touchmove', function() {}, {passive: true});
         });
     </script>
 </body>
