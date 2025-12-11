@@ -1,184 +1,292 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <button id="settingsBtn"
+        style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 24px;">⚙️</button>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            text-align: center; 
-            padding: 0; 
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 0;
             margin: 0;
             user-select: none;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; 
-            overflow: auto; 
+            min-height: 100vh;
+            overflow: auto;
         }
 
-        header { padding: 20px; }
-        #coins { font-size: 48px; font-weight: bold; }
-        
-        #dice { 
-            font-size: 120px; 
+        header {
+            padding: 20px;
+        }
+
+        #coins {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        #dice {
+            font-size: 120px;
             transition: transform 0.3s ease;
             cursor: pointer;
         }
-        #dice.anim { animation: diceRoll 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+
+        #dice.anim {
+            animation: diceRoll 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
 
         @keyframes diceRoll {
-            0% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(360deg) scale(1.4); }
-            50% { transform: rotate(720deg) scale(1.7); }
-            75% { transform: rotate(1080deg) scale(1.4); }
-            100% { transform: rotate(1440deg) scale(1); }
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            25% {
+                transform: rotate(360deg) scale(1.4);
+            }
+
+            50% {
+                transform: rotate(720deg) scale(1.7);
+            }
+
+            75% {
+                transform: rotate(1080deg) scale(1.4);
+            }
+
+            100% {
+                transform: rotate(1440deg) scale(1);
+            }
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.75;} }
-        @keyframes buttonPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
 
-        .main { 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
+            to {
+                opacity: 1;
+            }
         }
 
-        .board-container { 
-            width: 100%; 
-            overflow-x: auto; 
-            padding: 10px 0; 
-            -webkit-overflow-scrolling: touch; 
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.75;
+            }
         }
 
-        #board { 
-            display: flex; 
-            justify-content: flex-start; 
-            flex-wrap: nowrap; 
-            gap: 10px; 
-            padding: 0 20px;
-            scroll-snap-type: x proximity; 
+        @keyframes buttonPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
-        .slot { 
-            min-width: 68px; 
-            height: 68px; 
-            border-radius: 14px; 
-            display: flex; 
+        .main {
+            flex-grow: 1;
+            display: flex;
             flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 12px; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .board-container {
+            width: 100%;
+            overflow-x: auto;
+            padding: 10px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #board {
+            display: flex;
+            justify-content: flex-start;
+            flex-wrap: nowrap;
+            gap: 10px;
+            padding: 0 20px;
+            scroll-snap-type: x proximity;
+        }
+
+        .slot {
+            min-width: 68px;
+            height: 68px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             color: white;
             animation: fadeIn 0.5s;
         }
 
-        .slot:hover { transform: scale(1.12); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+        .slot:hover {
+            transform: scale(1.12);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
 
-        .current { 
-            background: linear-gradient(45deg, #ffd700, #ffaa00) !important; 
-            border: 4px solid #ff6600 !important; 
-            box-shadow: 0 0 25px #ffaa00, 0 0 15px #ffd700 inset !important; 
+        .current {
+            background: linear-gradient(45deg, #ffd700, #ffaa00) !important;
+            border: 4px solid #ff6600 !important;
+            box-shadow: 0 0 25px #ffaa00, 0 0 15px #ffd700 inset !important;
             transform: scale(1.15) !important;
         }
 
-        .highlight { 
-            background: linear-gradient(45deg, #ffd700, #ff6600) !important; 
-            box-shadow: 0 0 50px #ffd700, 0 0 70px #ff6600 !important; 
-            transform: scale(1.4) !important; 
+        .highlight {
+            background: linear-gradient(45deg, #ffd700, #ff6600) !important;
+            box-shadow: 0 0 50px #ffd700, 0 0 70px #ff6600 !important;
+            transform: scale(1.4) !important;
             animation: pulse 0.6s infinite !important;
         }
 
-        .locked { background: #444 !important; color: #eee; } 
-        .unlocked { background: linear-gradient(45deg, #00ff88, #00cc66); } 
-
-        #progress-bar { width: 80%; height: 8px; background: #333; border-radius: 4px; margin: 10px auto; }
-        #progress-fill { height: 100%; background: #ffd700; border-radius: 4px; transition: width 0.5s; }
-
-        footer { 
-            display: flex; 
-            justify-content: space-around; 
-            padding: 15px; 
-            background: rgba(0,0,0,0.2); 
-            flex-wrap: wrap; 
-            gap: 10px; 
+        .locked {
+            background: #444 !important;
+            color: #eee;
         }
 
-        button { 
-            background: linear-gradient(45deg, #00ff88, #00cc66); 
-            border: none; 
-            padding: 10px 20px; 
-            font-size: 16px; 
-            border-radius: 15px; 
-            cursor: pointer; 
+        .unlocked {
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+        }
+
+        #progress-bar {
+            width: 80%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 10px auto;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: #ffd700;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 15px;
+            cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,255,136,0.4);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
             transition: all 0.2s;
-            display: flex; 
-            align-items: center; 
+            display: flex;
+            align-items: center;
             justify-content: center;
             gap: 5px;
-            min-width: 120px; 
-            touch-action: manipulation; 
+            min-width: 120px;
+            touch-action: manipulation;
         }
 
-        button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,255,136,0.6); }
-        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.6);
+        }
 
-        button.pulse { animation: buttonPulse 1.5s infinite; }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-        .prestigeBtn { background: #ffcc00; color: #333; }
+        button.pulse {
+            animation: buttonPulse 1.5s infinite;
+        }
 
-        #tutorial-modal { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0,0,0,0.8); 
-            display: none; /* Скрыто по умолчанию */
-            align-items: center; 
-            justify-content: center; 
+        .prestigeBtn {
+            background: #ffcc00;
+            color: #333;
+        }
+
+        #tutorial-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            /* Скрыто по умолчанию */
+            align-items: center;
+            justify-content: center;
             z-index: 10;
         }
 
-        #tutorial-content { 
-            background: white; 
-            color: black; 
-            padding: 20px; 
-            border-radius: 10px; 
-            text-align: left; 
-            max-width: 80%; 
+        #tutorial-content {
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            max-width: 80%;
             max-height: 80vh;
             overflow-y: auto;
         }
 
-        @media (max-width: 600px) { 
-            .slot { min-width: 60px; height: 60px; font-size: 10px; } 
-            button { min-width: 100px; font-size: 14px; } 
-            #coins { font-size: 36px; }
-            #dice { font-size: 90px; }
+        @media (max-width: 600px) {
+            .slot {
+                min-width: 60px;
+                height: 60px;
+                font-size: 10px;
+            }
+
+            button {
+                min-width: 100px;
+                font-size: 14px;
+            }
+
+            #coins {
+                font-size: 36px;
+            }
+
+            #dice {
+                font-size: 90px;
+            }
         }
 
-        #confetti { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            pointer-events: none; 
-            z-index: 5; 
+        #confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
             display: none;
-        } 
+        }
     </style>
 </head>
+
 <body>
     <!-- Добавлен отсутствующий HTML-контент -->
     <div id="tutorial-modal">
@@ -189,6 +297,24 @@
             <p>3. Открывай и улучшай слоты за монеты</p>
             <p>4. Используй кнопки для получения бонусов</p>
             <button onclick="document.getElementById('tutorial-modal').style.display='none'">Понятно!</button>
+        </div>
+    </div>
+
+    <div id="settings-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20; align-items: center; justify-content: center;">
+        <div style="background: white; color: black; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3>⚙️ Настройки тестирования</h3>
+            <button onclick="coins += 1000000; updateUI(); saveProgress(); showAlert('+1M монет');"
+                style="background: #ff0066; color: white; margin: 5px;">
+                +1M монет
+            </button>
+            <button onclick="energy = 5; updateUI(); saveProgress(); showAlert('Энергия заполнена');"
+                style="margin: 5px;">
+                ♻️ Полная энергия
+            </button>
+            <button onclick="document.getElementById('settings-modal').style.display='none'" style="margin: 5px;">
+                Закрыть
+            </button>
         </div>
     </div>
 
@@ -204,7 +330,7 @@
         <div id="progress-bar">
             <div id="progress-fill" style="width: 0%"></div>
         </div>
-        
+
         <div class="board-container">
             <div id="board"></div>
         </div>
@@ -259,14 +385,14 @@
                     console.error("Ошибка загрузки сохранения:", e);
                 }
             }
-            
+
             // Автоматически открываем первые 3 слота для новых игроков
             if (!unlocked.some(u => u)) {
                 unlocked[0] = true;
                 unlocked[1] = true;
                 unlocked[2] = true;
             }
-            
+
             updateEnergy();
             updateUI();
         }
@@ -297,29 +423,29 @@
             const rollBtn = document.getElementById('rollBtn');
             rollBtn.textContent = `🎲 Крутить! (${rollsLeft}/5)`;
             rollBtn.disabled = rollsLeft <= 0;
-            
+
             const prestigeBtn = document.getElementById('prestigeBtn');
             prestigeBtn.disabled = !unlocked.every(u => u);
             prestigeBtn.textContent = `🔄 Prestige ${prestigeLevel}`;
-            
+
             // Обновление прогресс-бара
             const progressPercent = (energy / 5) * 100;
             document.getElementById('progress-fill').style.width = `${progressPercent}%`;
-            
+
             updateBoard();
         }
 
         function updateBoard() {
             const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
-            
+
             for (let i = 0; i < boardSize; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'slot';
                 slot.dataset.index = i;
-                
+
                 if (i === currentPosition) slot.classList.add('current');
-                
+
                 if (!unlocked[i]) {
                     const cost = unlockCost(i);
                     slot.innerHTML = `🔒<br>${cost.toLocaleString()}`;
@@ -328,11 +454,11 @@
                     slot.innerHTML = `x${(multipliers[i] * globalMulti).toFixed(1)}`;
                     slot.classList.add('unlocked');
                 }
-                
+
                 slot.onclick = () => handleSlot(i);
                 boardEl.appendChild(slot);
             }
-            
+
             // Прокрутка к текущей позиции
             setTimeout(() => {
                 const currentSlot = document.querySelector(`[data-index="${currentPosition}"]`);
@@ -342,19 +468,19 @@
             }, 100);
         }
 
-        function unlockCost(i) { 
-            return Math.floor(500 * Math.pow(1.5, i) * Math.pow(2, prestigeLevel)); 
+        function unlockCost(i) {
+            return Math.floor(500 * Math.pow(1.5, i) * Math.pow(2, prestigeLevel));
         }
-        
-        function upgradeCost(i) { 
-            return Math.floor(800 * multipliers[i] * Math.pow(2, prestigeLevel)); 
+
+        function upgradeCost(i) {
+            return Math.floor(800 * multipliers[i] * Math.pow(2, prestigeLevel));
         }
 
         function handleSlot(i) {
             if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
-            
+
             if (!unlocked[i]) {
                 const cost = unlockCost(i);
                 if (coins >= cost) {
@@ -380,14 +506,14 @@
 
         function roll() {
             if (rollsLeft <= 0) return;
-            
+
             if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('heavy');
             }
-            
+
             const diceEl = document.getElementById('dice');
             diceEl.classList.add('anim');
-            
+
             setTimeout(() => {
                 diceEl.classList.remove('anim');
                 const steps = Math.floor(Math.random() * 6) + 1;
@@ -395,17 +521,17 @@
                 let path = [];
                 let tempPos = currentPosition;
                 let hasJackpot = false;
-                
+
                 rollsSinceJackpot++;
-                
+
                 for (let i = 0; i < steps; i++) {
                     tempPos = (tempPos + 1) % boardSize;
                     path.push(tempPos);
-                    
+
                     if (unlocked[tempPos]) {
                         let slotR = multipliers[tempPos] * globalMulti;
                         let bonus = getBonus();
-                        
+
                         if (bonus === 'x2') slotR *= 2;
                         if (bonus === 'jackpot' || rollsSinceJackpot >= PITY_ROLLS) {
                             slotR *= 10;
@@ -413,23 +539,23 @@
                             rollsSinceJackpot = 0;
                             showConfetti();
                         }
-                        
+
                         reward += slotR;
                     }
                 }
-                
+
                 coins += reward;
                 currentPosition = tempPos;
                 animatePath(path);
-                
+
                 showAlert(`${hasJackpot ? '💥 КРИТИЧНЫЙ УДАР!' : '🎉'} ${steps} шагов! +${Math.floor(reward)} монет!`);
-                
+
                 energy--;
                 lastEnergyUpdate = Date.now();
                 updateEnergy();
                 updateUI();
                 saveProgress();
-                
+
             }, 1300);
         }
 
@@ -453,7 +579,7 @@
                     }
                 }, idx * 280);
             });
-            
+
             setTimeout(() => {
                 document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
             }, path.length * 280 + 600);
@@ -462,7 +588,7 @@
         function claimDaily() {
             const now = Date.now();
             const today = Math.floor(now / DAY_MS);
-            
+
             if (today > lastDailyClaim) {
                 coins += 500 * globalMulti;
                 lastDailyClaim = today;
@@ -484,7 +610,7 @@
 
         function prestige() {
             if (!unlocked.every(u => u)) return;
-            
+
             prestigeLevel++;
             globalMulti += 0.1;
             unlocked = Array(boardSize).fill(false);
@@ -494,7 +620,7 @@
             multipliers = Array(boardSize).fill(1);
             currentPosition = 0;
             coins = 0;
-            
+
             showAlert(`🔄 Prestige ${prestigeLevel}! +10% глобальный мультипликатор! 🌟`);
             updateUI();
             saveProgress();
@@ -515,7 +641,7 @@
         function showConfetti() {
             const confettiEl = document.getElementById('confetti');
             confettiEl.style.display = 'block';
-            
+
             // Простая анимация конфетти
             confettiEl.innerHTML = '';
             for (let i = 0; i < 50; i++) {
@@ -528,7 +654,7 @@
                 dot.style.left = Math.random() * 100 + 'vw';
                 dot.style.top = '-20px';
                 dot.style.animation = `fall ${1 + Math.random() * 2}s linear forwards`;
-                
+
                 // Добавляем CSS для анимации падения
                 const style = document.createElement('style');
                 style.textContent = `
@@ -539,7 +665,7 @@
                 confettiEl.appendChild(style);
                 confettiEl.appendChild(dot);
             }
-            
+
             setTimeout(() => {
                 confettiEl.style.display = 'none';
                 confettiEl.innerHTML = '';
@@ -554,22 +680,37 @@
             document.getElementById('prestigeBtn').onclick = prestige;
             document.getElementById('helpBtn').onclick = showHelp;
             document.getElementById('dice').onclick = roll;
-            
+
             // Закрытие модального окна при клике вне его
-            document.getElementById('tutorial-modal').onclick = function(e) {
+            document.getElementById('tutorial-modal').onclick = function (e) {
                 if (e.target === this) {
                     this.style.display = 'none';
                 }
             };
-            
+
             loadProgress();
-            
+
             // Автообновление энергии каждую минуту
             setInterval(() => {
                 updateEnergy();
                 updateUI();
             }, 60000);
         });
+        window.debugAddCoins = function (amount = 1000000) {
+            coins += amount;
+            showAlert(`[DEBUG] +${amount.toLocaleString()} монет`);
+            updateUI();
+            saveProgress();
+            console.log(`Добавлено ${amount} монет. Всего: ${coins}`);
+        };
     </script>
+
+    <script>
+// Обработчик кнопки настроек
+document.getElementById('settingsBtn').onclick = () => {
+    document.getElementById('settings-modal').style.display = 'flex';
+};
+</script>
 </body>
+
 </html>
