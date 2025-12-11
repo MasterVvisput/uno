@@ -8,14 +8,18 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             color: white; 
             text-align: center; 
-            padding: 20px; 
+            padding: 0; 
             margin: 0;
             user-select: none;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
-        #coins { font-size: 48px; margin: 20px; font-weight: bold; }
+        header { padding: 20px; }
+        #coins { font-size: 48px; font-weight: bold; }
         #dice { 
             font-size: 120px; 
-            margin: 20px; 
             transition: transform 0.3s ease;
             cursor: pointer;
         }
@@ -27,27 +31,14 @@
             75% { transform: rotate(1080deg) scale(1.4); }
             100% { transform: rotate(1440deg) scale(1); }
         }
-        button { 
-            background: linear-gradient(45deg, #00ff88, #00cc66); 
-            border: none; 
-            padding: 15px 30px; 
-            font-size: 20px; 
-            border-radius: 15px; 
-            margin: 8px; 
-            cursor: pointer; 
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,255,136,0.4);
-            transition: all 0.2s;
-        }
-        button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,255,136,0.6); }
-        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .board-container { width: 100%; overflow-x: auto; padding: 10px 0; }
         #board { 
             display: flex; 
-            justify-content: center; 
-            flex-wrap: wrap; 
-            max-width: 900px; 
-            margin: 30px auto; 
+            justify-content: flex-start; 
+            flex-wrap: nowrap; 
             gap: 6px;
+            padding: 0 20px;
         }
         .slot { 
             width: 68px; 
@@ -62,12 +53,13 @@
             cursor: pointer; 
             transition: all 0.3s ease; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            color: white; /* Улучшен contrast */
         }
         .slot:hover { transform: scale(1.12); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
         .current { 
             background: linear-gradient(45deg, #ffd700, #ffaa00) !important; 
             border: 4px solid #ff6600 !important; 
-            box-shadow: 0 0 25px #ffaa00 !important; 
+            box-shadow: 0 0 25px #ffaa00, 0 0 15px #ffd700 inset !important; /* Glow эффект */
             transform: scale(1.15) !important;
         }
         .highlight { 
@@ -77,34 +69,85 @@
             animation: pulse 0.6s infinite !important;
         }
         @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.75;} }
-        .locked { background: #666 !important; color: #ddd; }
-        .prestigeBtn { background: #ffcc00; color: #333; font-size: 22px; }
+        .locked { background: #444 !important; color: #eee; } /* Темнее для contrast */
+        .unlocked { background: linear-gradient(45deg, #00ff88, #00cc66); } /* Зеленый для unlocked */
+        #progress-bar { width: 80%; height: 8px; background: #333; border-radius: 4px; margin: 10px auto; }
+        #progress-fill { height: 100%; background: #ffd700; border-radius: 4px; transition: width 0.5s; }
+        footer { 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 10px; 
+            background: rgba(0,0,0,0.2); 
+        }
+        button { 
+            background: linear-gradient(45deg, #00ff88, #00cc66); 
+            border: none; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,255,136,0.4);
+            transition: all 0.2s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        button:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,255,136,0.6); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        button.pulse { animation: buttonPulse 1.5s infinite; }
+        @keyframes buttonPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .prestigeBtn { background: #ffcc00; color: #333; }
+        #tutorial-modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); 
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+        #tutorial-content { background: white; color: black; padding: 20px; border-radius: 10px; text-align: left; max-width: 80%; }
+        @media (max-width: 600px) { .slot { width: 60px; height: 60px; font-size: 10px; } } /* Responsive */
     </style>
 </head>
 <body>
-    <h1>🍀 Броски Кубиков 🍀</h1>
-    <div id="coins">Монеты: 0</div>
-    <div id="dice">🎲</div>
-    <button id="rollBtn">Крутить! (5/5)</button>
-    <button id="adBtn">📺 Реклама за +3</button>
-    <button id="dailyBtn">🎁 Ежедневка</button>
-    <button id="leaderboardBtn">🏆 Топ-10</button>
-    <button id="prestigeBtn" class="prestigeBtn" disabled>🔄 Prestige</button>
-    <div id="board"></div>
-    <button id="shareBtn">📤 Поделиться</button>
+    <header>
+        <h1>🍀 Броски Кубиков 🍀</h1>
+        <div id="coins">Монеты: 0</div>
+    </header>
+    <div class="main">
+        <div id="dice">🎲</div>
+        <div class="board-container">
+            <div id="board"></div>
+        </div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+    </div>
+    <footer>
+        <button id="rollBtn">🎲 Крутить! (5/5)</button>
+        <button id="adBtn" class="pulse">📺 Реклама +3</button>
+        <button id="dailyBtn">🎁 Ежедневка</button>
+        <button id="leaderboardBtn">🏆 Топ-10</button>
+        <button id="prestigeBtn" class="prestigeBtn" disabled>🔄 Prestige</button>
+        <button id="shareBtn" class="pulse">📤 Поделиться</button>
+    </footer>
+    <div id="tutorial-modal" style="display:none;">
+        <div id="tutorial-content">
+            <h2>Добро пожаловать!</h2>
+            <p>1. Брось кубик, чтобы двигаться по доске и зарабатывать монеты.</p>
+            <p>2. Разблокируй и апгрейди слоты для большего дохода.</p>
+            <p>3. Смотри рекламу за энергию, делись для бонусов!</p>
+            <button onclick="closeTutorial()">Понял!</button>
+        </div>
+    </div>
+
+    <canvas id="confetti" style="position:fixed;top:0;left:0;pointer-events:none;z-index:5;"></canvas> <!-- Для confetti -->
 
     <script>
         const boardSize = 20;
         const REGEN_TIME = 600000; // 10 мин
         const DAY_MS = 86400000;
-        const PITY_ROLLS = 20; // Гарант джекпота
+        const PITY_ROLLS = 20;
 
         let coins = 0, energy = 0, lastEnergyUpdate = Date.now(), rollsLeft = 0;
         let multipliers = Array(boardSize).fill(1);
         let unlocked = Array(boardSize).fill(false);
         let currentPosition = 0;
         let lastDailyClaim = 0;
-        let globalMulti = 1.0; // Prestige буст
+        let globalMulti = 1.0;
         let rollsSinceJackpot = 0;
         let prestigeLevel = 0;
 
@@ -131,6 +174,7 @@
             if (!unlocked[0]) unlocked.slice(0,3).forEach((_,i) => unlocked[i]=true);
             updateEnergy();
             updateUI();
+            showTutorialIfFirst();
         }
 
         function saveProgress() {
@@ -141,6 +185,17 @@
                 updatedAt: Date.now()
             };
             localStorage.setItem('diceProgress', JSON.stringify(data));
+        }
+
+        function showTutorialIfFirst() {
+            if (!localStorage.getItem('tutorialShown')) {
+                document.getElementById('tutorial-modal').style.display = 'flex';
+                localStorage.setItem('tutorialShown', 'true');
+            }
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorial-modal').style.display = 'none';
         }
 
         setInterval(() => {
@@ -161,10 +216,17 @@
         function updateUI() {
             document.getElementById('coins').textContent = `Монеты: ${Math.floor(coins).toLocaleString()}`;
             const rollBtn = document.getElementById('rollBtn');
-            rollBtn.textContent = `Крутить! (${rollsLeft}/5)`;
+            rollBtn.textContent = `🎲 Крутить! (${rollsLeft}/5)`;
             rollBtn.disabled = rollsLeft <= 0;
             document.getElementById('prestigeBtn').disabled = !unlocked.every(u => u);
             updateBoard();
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const unlockedCount = unlocked.filter(u => u).length;
+            const progress = (unlockedCount / boardSize) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
         }
 
         function updateBoard() {
@@ -174,6 +236,7 @@
                 const slot = document.createElement('div');
                 slot.className = 'slot';
                 slot.dataset.index = i;
+                slot.setAttribute('aria-label', unlocked[i] ? `Слот ${i}: x${(multipliers[i] * globalMulti).toFixed(1)}` : `Заблокированный слот ${i}`);
                 if (i === currentPosition) slot.classList.add('current');
                 if (!unlocked[i]) {
                     const cost = unlockCost(i);
@@ -181,11 +244,15 @@
                     slot.classList.add('locked');
                 } else {
                     slot.innerHTML = `x${(multipliers[i] * globalMulti).toFixed(1)}`;
+                    slot.classList.add('unlocked'); // Новый класс для стиля
+                    slot.style.animation = 'fadeIn 0.5s'; // Fade-in анимация
                 }
                 slot.onclick = () => handleSlot(i);
                 boardEl.appendChild(slot);
             }
         }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         function unlockCost(i) { return Math.floor(500 * Math.pow(1.5, i) * Math.pow(2, prestigeLevel)); }
         function upgradeCost(i) { return Math.floor(800 * multipliers[i] * Math.pow(2, prestigeLevel)); }
@@ -233,12 +300,13 @@
                     path.push(tempPos);
                     if (unlocked[tempPos]) {
                         let slotR = multipliers[tempPos] * globalMulti;
-                        let bonus = getBonus(); // Weighted
+                        let bonus = getBonus();
                         if (bonus === 'x2') slotR *= 2;
                         if (bonus === 'jackpot' || rollsSinceJackpot >= PITY_ROLLS) {
                             slotR *= 10;
                             hasJackpot = true;
                             rollsSinceJackpot = 0;
+                            triggerConfetti(); // Новый: Confetti при jackpot
                         }
                         reward += slotR;
                     }
@@ -276,6 +344,37 @@
             setTimeout(() => document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight')), path.length * 280 + 600);
         }
 
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            const particles = [];
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height / 2,
+                    size: Math.random() * 5 + 5,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    speedX: Math.random() * 4 - 2,
+                    speedY: Math.random() * 5 + 2
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    if (p.y > canvas.height) p.y = 0;
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+            setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 3000); // Очистка после 3s
+        }
+
         function claimDaily() {
             const now = Date.now();
             const today = Math.floor(now / DAY_MS);
@@ -291,7 +390,12 @@
         }
 
         function showLeaderboard() {
-            tg.showAlert('🏆 Ты #1 с ' + Math.floor(coins).toLocaleString() + ' монетами! (Локальный топ) 👑');
+            // Улучшено: Modal вместо alert (для лучшего UX)
+            tg.showPopup({
+                title: '🏆 Топ-10',
+                message: 'Ты #1 с ' + Math.floor(coins).toLocaleString() + ' монетами! (Локальный топ) 👑',
+                buttons: [{ text: 'OK' }]
+            });
         }
 
         function watchAd() {
@@ -309,7 +413,7 @@
             unlocked.slice(0,3).forEach((_,i) => unlocked[i]=true);
             multipliers = Array(boardSize).fill(1);
             currentPosition = 0;
-            coins = 0; // Или +bonus
+            coins = 0;
             tg.showAlert(`🔄 Prestige ${prestigeLevel}! +10% глобальный мультипликатор! 🌟`);
             updateUI();
             saveProgress();
