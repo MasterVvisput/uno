@@ -78,6 +78,7 @@
         }
         @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.75;} }
         .locked { background: #666 !important; color: #ddd; }
+        .prestigeBtn { background: #ffcc00; color: #333; font-size: 22px; }
     </style>
 </head>
 <body>
@@ -88,26 +89,30 @@
     <button id="adBtn">📺 Реклама за +3</button>
     <button id="dailyBtn">🎁 Ежедневка</button>
     <button id="leaderboardBtn">🏆 Топ-10</button>
+    <button id="prestigeBtn" class="prestigeBtn" disabled>🔄 Prestige</button>
     <div id="board"></div>
     <button id="shareBtn">📤 Поделиться</button>
 
     <script>
         const boardSize = 20;
-        const REGEN_TIME = 600000; // 10 мин в мс
-        const DAY_MS = 86400000; // 24 часа в мс
+        const REGEN_TIME = 600000; // 10 мин
+        const DAY_MS = 86400000;
+        const PITY_ROLLS = 20; // Гарант джекпота
 
         let coins = 0, energy = 0, lastEnergyUpdate = Date.now(), rollsLeft = 0;
         let multipliers = Array(boardSize).fill(1);
         let unlocked = Array(boardSize).fill(false);
         let currentPosition = 0;
         let lastDailyClaim = 0;
+        let globalMulti = 1.0; // Prestige буст
+        let rollsSinceJackpot = 0;
+        let prestigeLevel = 0;
 
         const tg = window.Telegram.WebApp;
         tg.initDataUnsafe = tg.initDataUnsafe || {};
         tg.ready();
         tg.expand();
 
-        // Load from localStorage
         function loadProgress() {
             const saved = localStorage.getItem('diceProgress');
             if (saved) {
@@ -119,27 +124,29 @@
                 energy = data.energy || 0;
                 lastEnergyUpdate = data.lastEnergyUpdate || Date.now();
                 lastDailyClaim = data.lastDailyClaim || 0;
+                globalMulti = data.globalMulti || 1.0;
+                prestigeLevel = data.prestigeLevel || 0;
+                rollsSinceJackpot = data.rollsSinceJackpot || 0;
             }
-            // Init first slots
             if (!unlocked[0]) unlocked.slice(0,3).forEach((_,i) => unlocked[i]=true);
             updateEnergy();
             updateUI();
         }
 
-        // Save to localStorage
         function saveProgress() {
             const data = {
                 coins, multipliers, unlocked, currentPosition,
-                energy, lastEnergyUpdate, lastDailyClaim, updatedAt: Date.now()
+                energy, lastEnergyUpdate, lastDailyClaim,
+                globalMulti, prestigeLevel, rollsSinceJackpot,
+                updatedAt: Date.now()
             };
             localStorage.setItem('diceProgress', JSON.stringify(data));
         }
 
-        // Energy regen timer
         setInterval(() => {
             updateEnergy();
             updateUI();
-        }, 60000); // Check every min
+        }, 60000);
 
         function updateEnergy() {
             const now = Date.now();
@@ -156,6 +163,7 @@
             const rollBtn = document.getElementById('rollBtn');
             rollBtn.textContent = `Крутить! (${rollsLeft}/5)`;
             rollBtn.disabled = rollsLeft <= 0;
+            document.getElementById('prestigeBtn').disabled = !unlocked.every(u => u);
             updateBoard();
         }
 
@@ -172,15 +180,15 @@
                     slot.innerHTML = `?<br>${cost.toLocaleString()}`;
                     slot.classList.add('locked');
                 } else {
-                    slot.innerHTML = `x${multipliers[i].toFixed(1)}`;
+                    slot.innerHTML = `x${(multipliers[i] * globalMulti).toFixed(1)}`;
                 }
                 slot.onclick = () => handleSlot(i);
                 boardEl.appendChild(slot);
             }
         }
 
-        function unlockCost(i) { return Math.floor(500 * Math.pow(1.5, i)); }
-        function upgradeCost(i) { return Math.floor(800 * multipliers[i]); }
+        function unlockCost(i) { return Math.floor(500 * Math.pow(1.5, i) * Math.pow(2, prestigeLevel)); }
+        function upgradeCost(i) { return Math.floor(800 * multipliers[i] * Math.pow(2, prestigeLevel)); }
 
         function handleSlot(i) {
             tg.HapticFeedback.impactOccurred('medium');
@@ -198,7 +206,7 @@
                 if (coins >= cost) {
                     coins -= cost;
                     multipliers[i] *= 1.5;
-                    tg.showAlert(`x${multipliers[i].toFixed(1)}! 💥`);
+                    tg.showAlert(`x${(multipliers[i] * globalMulti).toFixed(1)}! 💥`);
                 } else {
                     tg.showAlert(`Нужны ${cost.toLocaleString()} монет ☝️`);
                 }
@@ -219,14 +227,18 @@
                 let path = [];
                 let tempPos = currentPosition;
                 let hasJackpot = false;
+                rollsSinceJackpot++;
                 for (let i = 0; i < steps; i++) {
                     tempPos = (tempPos + 1) % boardSize;
                     path.push(tempPos);
                     if (unlocked[tempPos]) {
-                        let slotR = multipliers[tempPos];
-                        if (Math.random() < 0.05) {
+                        let slotR = multipliers[tempPos] * globalMulti;
+                        let bonus = getBonus(); // Weighted
+                        if (bonus === 'x2') slotR *= 2;
+                        if (bonus === 'jackpot' || rollsSinceJackpot >= PITY_ROLLS) {
                             slotR *= 10;
                             hasJackpot = true;
+                            rollsSinceJackpot = 0;
                         }
                         reward += slotR;
                     }
@@ -241,6 +253,13 @@
                 updateUI();
                 saveProgress();
             }, 1300);
+        }
+
+        function getBonus() {
+            const rand = Math.random();
+            if (rand < 0.7) return 'none';
+            if (rand < 0.9) return 'x2';
+            return 'jackpot';
         }
 
         function animatePath(path) {
@@ -261,9 +280,9 @@
             const now = Date.now();
             const today = Math.floor(now / DAY_MS);
             if (today > lastDailyClaim) {
-                coins += 500;
+                coins += 500 * globalMulti;
                 lastDailyClaim = today;
-                tg.showAlert('🌟 +500 монет ежедневно!');
+                tg.showAlert('🌟 +' + Math.floor(500 * globalMulti) + ' монет ежедневно!');
                 updateUI();
                 saveProgress();
             } else {
@@ -280,7 +299,20 @@
             updateEnergy();
             tg.showAlert('📺 +3 крутки! Готово 🚀');
             updateUI();
-            // Stub: real ads Day2
+        }
+
+        function prestige() {
+            if (!unlocked.every(u => u)) return;
+            prestigeLevel++;
+            globalMulti += 0.1;
+            unlocked = Array(boardSize).fill(false);
+            unlocked.slice(0,3).forEach((_,i) => unlocked[i]=true);
+            multipliers = Array(boardSize).fill(1);
+            currentPosition = 0;
+            coins = 0; // Или +bonus
+            tg.showAlert(`🔄 Prestige ${prestigeLevel}! +10% глобальный мультипликатор! 🌟`);
+            updateUI();
+            saveProgress();
         }
 
         function share() {
@@ -288,22 +320,20 @@
                 tg.initDataUnsafe.start_app || window.location.href,
                 `🍀 ${Math.floor(coins).toLocaleString()} монет в Бросках! Играй:`
             );
-            // Stub reward: +100 монет за share (real track Day3)
-            coins += 100;
-            tg.showAlert('📤 +100 монет за шаринг! 🔥');
+            coins += 200 * globalMulti;
+            tg.showAlert('📤 +' + Math.floor(200 * globalMulti) + ' монет за шаринг! 🔥');
             updateUI();
             saveProgress();
         }
 
-        // Bind events
         document.getElementById('rollBtn').onclick = roll;
         document.getElementById('adBtn').onclick = watchAd;
         document.getElementById('dailyBtn').onclick = claimDaily;
         document.getElementById('leaderboardBtn').onclick = showLeaderboard;
+        document.getElementById('prestigeBtn').onclick = prestige;
         document.getElementById('shareBtn').onclick = share;
-        document.getElementById('dice').onclick = roll; // Bonus tap
+        document.getElementById('dice').onclick = roll;
 
-        // Start
         loadProgress();
     </script>
 </body>
