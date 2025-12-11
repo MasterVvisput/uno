@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial; background: linear-gradient(#667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 20px; }
+        #dice { font-size: 100px; margin: 20px; transition: transform 0.5s; }
+        #coins { font-size: 48px; margin: 20px; }
+        button { background: #00ff88; border: none; padding: 15px 30px; font-size: 24px; border-radius: 10px; margin: 10px; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        #board { display: flex; justify-content: center; flex-wrap: wrap; max-width: 600px; margin: 20px auto; }
+        .slot { width: 80px; height: 80px; background: #ffdd44; margin: 5px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🍀 Броски Кубиков 🍀</h1>
+    <div id="coins">Монеты: 0</div>
+    <div id="dice">🎲</div>
+    <button id="rollBtn">Крутить! (5/5)</button>
+    <button id="adBtn">📺 Реклама за +3 крутки</button>
+    <button id="upgradeBtn">Улучшить слот (1K монет)</button>
+    <div id="board"></div>
+    <button onclick="share()">Поделиться прогрессом</button>
+
+    <script>
+        let coins = 0, rollsLeft = 5, multipliers = [1,1,1,1,1]; // 5 слотов на старте
+        const tg = window.Telegram.WebApp; tg.initDataUnsafe = tg.initDataUnsafe || {}; tg.ready();
+        tg.expand(); tg.MainButton.text = 'Ежедневный бонус'; tg.MainButton.onClick(claimDaily);
+
+        function updateUI() {
+            document.getElementById('coins').textContent = `Монеты: ${coins}`;
+            document.getElementById('rollBtn').textContent = `Крутить! (${rollsLeft}/5)`; 
+            document.getElementById('rollBtn').disabled = rollsLeft <= 0;
+            document.getElementById('upgradeBtn').disabled = coins < 1000;
+            updateBoard();
+        }
+
+        function roll() {
+            if (rollsLeft <= 0) return;
+            tg.HapticFeedback.impactOccurred('light'); // Вибрация
+            document.getElementById('dice').style.transform = 'rotate(360deg) scale(1.2)';
+            setTimeout(() => {
+                const steps = Math.floor(Math.random() * 6) + 1;
+                let reward = steps * multipliers[0]; // Первый слот
+                coins += reward;
+                alert(`🎉 Выпало ${steps}! +${reward} монет!`); // В TG — tg.showAlert
+                rollsLeft--;
+                updateUI();
+                saveProgress(); // Firebase call
+            }, 500);
+        }
+
+        function updateBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = multipliers.map(m => `<div class="slot">x${m}</div>`).join('');
+        }
+
+        function upgrade() {
+            if (coins >= 1000) {
+                coins -= 1000;
+                multipliers[0] *= 1.5;
+                tg.showAlert('Слот улучшен! 🚀');
+                updateUI();
+            }
+        }
+
+        function claimDaily() { coins += 500; tg.showAlert('Ежедневка: +500!'); updateUI(); }
+
+        function share() { tg.shareUrl(tg.initDataUnsafe.start_app || window.location.href, `У меня ${coins} монет! Присоединяйся!`); }
+
+        // Симуляция save (в реале — fetch('/save', {user_id: tg.initDataUnsafe.user.id, coins}))
+        function saveProgress() { console.log('Сохранено:', coins); }
+
+        document.getElementById('rollBtn').onclick = roll;
+        document.getElementById('adBtn').onclick = () => { rollsLeft += 3; tg.showAlert('Реклама просмотрена! +3'); updateUI(); }; // Заглушка
+        document.getElementById('upgradeBtn').onclick = upgrade;
+        updateUI();
+    </script>
+</body>
+</html>
